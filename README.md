@@ -50,3 +50,5 @@ python3 deviantart.py
 ## License
 
 The code is licensed under the MIT License.
+
+> Disclaimer: All art you download using this script belongs to their rightful owners. Please support them by purchasing their art.
