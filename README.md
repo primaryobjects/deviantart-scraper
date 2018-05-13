@@ -28,10 +28,10 @@ pip install -r requirements.txt
 
 ## Run
 
-**1.** Replace on line *53* **username** with the username of your peferred artist:
+**1.** Replace on line *54* **username** with the username of your peferred artist:
 
 ```
-53   d.get('https://username.deviantart.com/gallery/')
+54   d.get('https://username.deviantart.com/gallery/')
 ```
 
 **2.** Run 
