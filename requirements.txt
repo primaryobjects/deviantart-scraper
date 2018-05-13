@@ -1,0 +1,4 @@
+###### Required Packages ######
+selenium
+bs4
+requests
