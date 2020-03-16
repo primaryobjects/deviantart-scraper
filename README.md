@@ -66,7 +66,7 @@ optional arguments:
 
 ## Automatically Changing the Desktop Background Wallpaper
 
-You can automatically download and set the desktop background wallpaper by using the command-line arguments with a script or desktop background image changer utility. The following example demonstrates this for Linux Mint using [wallpaper.sh]((wallpaper.sh).
+You can automatically download and set the desktop background wallpaper by using the command-line arguments with a script or desktop background image changer utility. The following example demonstrates this for Linux Mint using [wallpaper.sh](wallpaper.sh).
 
 ```bash
 #!/bin/bash
