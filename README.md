@@ -40,7 +40,7 @@ To begin downloading images, use the following steps. Images will be downloaded 
 python3 devianart.py
 ```
 
-### Options
+## Additional Options
 
 The following command-line arguments are supported.
 
