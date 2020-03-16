@@ -14,6 +14,7 @@ import pathlib
 import requests
 import subprocess
 import imghdr
+import argparse
 from random import randint
 
 #======================== INITIALIZE VARIABLES =================================
@@ -24,11 +25,12 @@ threads = []
 tasks   = Queue()
 lock    = Lock()
 img_num = 0
-max_image_count = 5 # Set to 0 for all images.
+max_image_count = 0 # Set to 0 for all images.
 folder = ''
 file_name = ''
 first_image = ''
-random_image = ''
+is_random = ''
+url = ''
 
 #======================== WELCOME MESSAGE ======================================
 
@@ -59,7 +61,7 @@ def get_username(d):
 def get_thumb_links(q):
     d = get_driver()
     # REPLACE username with your preferred artist
-    d.get('https://www.deviantart.com')
+    d.get(url)
     unique_img = scroll_page_down(d)
     time.sleep(0.5)
     for img in unique_img:
@@ -77,9 +79,9 @@ def get_thumb_links(q):
 def scroll_page_down(d):
     SCROLL_PAUSE_TIME = 1.5
 
-    global random_image
+    global is_random
     r = -1
-    if random_image == 'random':
+    if is_random:
         r = randint(0, 250)
 
     # Get scroll height
@@ -95,7 +97,7 @@ def scroll_page_down(d):
 
         for link in links:
             l = link.get_attribute('href')
-            if not l in images and ((r == -1 and len(images) < max_image_count) or (r > -1 and len(images) < r + 1)):
+            if not l in images and (max_image_count == 0 or ((r == -1 and len(images) < max_image_count) or (r > -1 and len(images) < r + 1))):
                 print('Queuing ' + l)
                 images.append(l)
             else:
@@ -185,7 +187,7 @@ def download_now(req,title):
         file.write(req.content)
 
     # Set image extension by detecting the type of image (jpg, gif, png).
-    ext = imghdr.what(file_path)
+    ext = imghdr.what(file_path) or 'jpg'
     if ext == 'jpeg':
         ext = 'jpg'
     base = os.path.splitext(file_path)[0]
@@ -228,24 +230,26 @@ def main():
     global folder
     global file_name
     global max_image_count
-    global random_image
+    global is_random
+    global url
 
-    if len(sys.argv) > 1:
-        folder = sys.argv[1]
-    else:
-        folder = 'images'
-    folder = os.path.join(folder, '')
+    ap = argparse.ArgumentParser()
 
-    if len(sys.argv) > 2:
-        file_name = sys.argv[2]
-    else:
-        file_name = ''
+    # Add the arguments to the parser
+    ap.add_argument("-d", "--dir", required=False, help="Directory to store images. Default: ./images", default="images")
+    ap.add_argument("-f", "--filename", required=False, help="Explicit base filename to use. Default: downloaded filename", default="")
+    ap.add_argument("-u", "--url", required=False, help="DeviantArt gallery url to scrape images from. Default: deviantart.com", default="https://www.deviantart.com")
+    ap.add_argument("-c", "--count", required=False, help="Maximum number of images to download. Default: 25", type=int, default=25)
+    ap.add_argument("-r", "--random", required=False, help="Download a random image. Default: False", action="store_true")
 
-    if len(sys.argv) > 3:
-        max_image_count = int(sys.argv[3])
+    # Parse command-line arguments.
+    args = vars(ap.parse_args())
 
-    if len(sys.argv) > 4:
-        random_image = sys.argv[4]
+    folder = os.path.join(args['dir'].lstrip(), '')
+    file_name = args['filename'].lstrip()
+    url = args['url'].lstrip()
+    max_image_count = args['count']
+    is_random = args['random']
 
     welcome_message() # Display Welcome Message
     start = time.time()

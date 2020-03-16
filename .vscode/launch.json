@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args":["/tmp", "wallpaper", "1", "random"]
+            "args":["-d /tmp", "-f wallpaper", "-c 1", "-r"]
         }
     ]
 }
