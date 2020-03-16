@@ -5,6 +5,7 @@ from selenium.common.exceptions import WebDriverException
 from bs4 import BeautifulSoup
 from queue import Queue
 from threading import Thread, Lock
+import sys
 import collections
 import datetime
 import time
@@ -12,15 +13,22 @@ import os
 import pathlib
 import requests
 import subprocess
+import imghdr
+from random import randint
 
 #======================== INITIALIZE VARIABLES =================================
 
 images  = []
-img_num = 0
-workers = 20
+workers = 1 #20
 threads = []
 tasks   = Queue()
 lock    = Lock()
+img_num = 0
+max_image_count = 5 # Set to 0 for all images.
+folder = ''
+file_name = ''
+first_image = ''
+random_image = ''
 
 #======================== WELCOME MESSAGE ======================================
 
@@ -35,23 +43,23 @@ def welcome_message():
 def get_driver():
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
-    driver = webdriver.Chrome(chrome_options=options)
+    driver = webdriver.Chrome(chrome_options=options, executable_path='./chromedriver')
     return driver
 
 #======================== GET USERNAME =========================================
 
 def get_username(d):
     global username
-    html = d.page_source
-    soup = BeautifulSoup(html, 'html.parser')
-    username = soup.find(class_='gruserbadge').find('a').get_text()
+    #html = d.page_source
+    #soup = BeautifulSoup(html, 'html.parser')
+    username = "" #soup.find(class_='gruserbadge').find('a').get_text()
 
 #======================== GET LINKS FROM TUMBNAILS =============================
 
 def get_thumb_links(q):
     d = get_driver()
     # REPLACE username with your preferred artist
-    d.get('https://username.deviantart.com/gallery/')
+    d.get('https://www.deviantart.com/topic/digital-art')
     unique_img = scroll_page_down(d)
     time.sleep(0.5)
     for img in unique_img:
@@ -68,26 +76,43 @@ def get_thumb_links(q):
 
 def scroll_page_down(d):
     SCROLL_PAUSE_TIME = 1.5
+
+    global random_image
+    r = -1
+    if random_image == 'random':
+        r = randint(0, 250)
+
     # Get scroll height
     last_height = d.execute_script("return document.body.scrollHeight")
-    while True:
+    while ((r == -1 and len(images) < max_image_count) or (r > -1 and len(images) < r + 1)) or max_image_count == 0:
         # Scroll down to bottom
         d.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(SCROLL_PAUSE_TIME) # Wait to load page
         # Calculate new scroll height and compare with last scroll height
         new_height = d.execute_script("return document.body.scrollHeight")
-        # Get the tumbnail image links
-        im = d.find_element_by_class_name('folderview-art')
-        links = im.find_elements_by_class_name('torpedo-thumb-link')
+        im = d.find_element_by_xpath("//div[@data-hook='all_content']")
+        links = im.find_elements_by_xpath("//a[@data-hook='deviation_link']")
+
         for link in links:
             l = link.get_attribute('href')
-            images.append(l)
+            if not l in images and ((r == -1 and len(images) < max_image_count) or (r > -1 and len(images) < r + 1)):
+                print('Queuing ' + l)
+                images.append(l)
+            else:
+                print('Skipping duplicate ' + l)
         unique_img = list(set(images)) # Remove duplicates
         time.sleep(0.5)
         # Break when the end is reached
         if new_height == last_height:
             break
         last_height = new_height
+
+    if r > 0:
+        selected_image = images[r]
+        images.clear()
+        images.append(selected_image)
+        unique_img = list(set(images)) # Remove duplicates
+
     return unique_img
 
 #======================== GET FULL RESOLUTION IMAGES ===========================
@@ -99,18 +124,13 @@ def get_full_image(l):
     title = ''
     link = ''
     try:
-        link = soup.find('a', class_='dev-page-download')['href']
-    except TypeError:
-        try:
-            link = soup.find('img', class_='dev-content-full')['src']
-            title = soup.find('a',
-                                 class_='title').text.replace(' ', '_').lower()
-        except TypeError:
-            try:
-                link = age_restricted(l)
-            except (WebDriverException, AttributeError):
-                link = age_restricted(l)
-        pass
+        art_stage = soup.find('div', attrs={'data-hook': 'art_stage'})
+        link = art_stage.find('img')['src']
+        title = soup.find('h1', attrs={'data-hook': 'deviation_title'}).text.replace(' ', '_').lower()
+    except TypeError as e:
+        print('Error downloading ' + l)
+        print(e)
+
     req = s.get(link, headers=h)
     time.sleep(0.1)
     download_now(req,title)
@@ -143,26 +163,37 @@ def age_restricted(l):
 #======================== FILENAME FORMATTING ==================================
 
 def name_format(url,title):
-    if url.find('/'):
-        name =  url.rsplit('/', 1)[1]
-        p1 = name.split('-')[0]
-        p2 = name.split('-')[1].split('.')[1]
-        name = p1 + '.' + p2
+    timestr = time.strftime("%Y-%m-%d-%H-%M-%S")
+    name =  title + '_' + timestr
     if title != '':
-        name = title + '.png'
+        name = title + '.jpg'
     return name
 
 #======================== DOWNLOAD USING REQUESTS ==============================
 
 def download_now(req,title):
+    global file_name
+
     url = req.url
-    name = name_format(url,title)
-    pathlib.Path('{}.deviantart.com'.format(username)).mkdir(parents=True,
-                                                             exist_ok=True)
-    with open(os.path.join('{}.deviantart.com/'.format(username),
-                                               '{}'.format(name)),'wb') as file:
+    name = file_name or name_format(url,title)
+
+    global folder
+    pathlib.Path('{}'.format(folder)).mkdir(parents=True, exist_ok=True)
+    file_path = os.path.join('{}'.format(folder + name))
+
+    with open(file_path,'wb') as file:
         file.write(req.content)
 
+    # Set image extension by detecting the type of image (jpg, gif, png).
+    ext = imghdr.what(file_path)
+    if ext == 'jpeg':
+        ext = 'jpg'
+    base = os.path.splitext(file_path)[0]
+    os.rename(file_path, base + '.' + ext)
+
+    global first_image
+    if first_image == '':
+        first_image = base + '.' + ext
 #======================== SAVE IMAGE LINKS TO A FILE ===========================
 
 def save_img(url):
@@ -185,15 +216,37 @@ def worker_thread(q, lock):
         title = p.t
         name = name_format(url, title)
         with lock:
-            global img_num
-            img_num += 1
             save_img(url)
-            print('Image ' + str(img_num) + ' - ' + name)
+            global img_num
+            img_num = img_num + 1
+            print('Image ' + str(img_num) + ' ' + name)
         q.task_done()
 
 #======================== MAIN FUNCTION ========================================
 
 def main():
+    global folder
+    global file_name
+    global max_image_count
+    global random_image
+
+    if len(sys.argv) > 1:
+        folder = sys.argv[1]
+    else:
+        folder = 'images'
+    folder = os.path.join(folder, '')
+
+    if len(sys.argv) > 2:
+        file_name = sys.argv[2]
+    else:
+        file_name = ''
+
+    if len(sys.argv) > 3:
+        max_image_count = int(sys.argv[3])
+
+    if len(sys.argv) > 4:
+        random_image = sys.argv[4]
+
     welcome_message() # Display Welcome Message
     start = time.time()
     get_thumb_links(tasks) # Fill the Queue
@@ -212,12 +265,19 @@ def main():
         t.join()
 
     # Print Stats
-    folder_size = subprocess.check_output(['du','-shx',
-             '{}.deviantart.com/'.format(username)]).split()[0].decode('utf-8')
-    print('\n  Total Images: ' + str(img_num) + ' (' + str(folder_size) + ')')
-    print('  Excepted: ' + expected_img_num)
-    end = time.time()
-    print('  Elapsed Time: {:.4f}\n'.format(end-start))
+    if not '/tmp' in folder:
+        try:
+            folder_size = subprocess.check_output(['du','-shx', folder]).split()[0].decode('utf-8')
+            print('\n  Total Images: ' + str(img_num) + ' (' + str(folder_size) + ')')
+            print('  Expected: ' + expected_img_num)
+            end = time.time()
+            print('  Elapsed Time: {:.4f}\n'.format(end-start))
+        except:
+            pass
+
+    if max_image_count == 1:
+        global first_image
+        print(first_image)
 
 if __name__ == '__main__':
     try:
