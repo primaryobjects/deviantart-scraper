@@ -19,7 +19,6 @@ cd $ORIGINAL_DIR
 
 # Delete cached wallpaper.
 rm -f /home/$USER/.cache/wallpaper/*
-sleep 1
 
 echo "Downloaded $FILE_PATH" >> /tmp/wallpaper.log
 
