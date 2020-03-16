@@ -37,7 +37,7 @@ pip install -r requirements.txt
 To begin downloading images, use the following steps. Images will be downloaded into a default folder `images`. Additionally, a metadata file `gallery.txt` will be generated, containing the names of the files downloaded.
 
 ```bash
-python3 deviantart.py
+python3 devianart.py
 ```
 
 ### Options
@@ -45,7 +45,7 @@ python3 deviantart.py
 The following command-line arguments are supported.
 
 ```bash
-python3 deviantart.py --help
+python3 devianart.py --help
 ```
 
 ```text
