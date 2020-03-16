@@ -72,12 +72,15 @@ You can automatically download and set the desktop background wallpaper by using
 #!/bin/bash
 
 USER=$(whoami)
+ORIGINAL_DIR=$(pwd)
 
 # Delete cached wallpaper.
 rm -f /tmp/wallpaper.*
 
 # Download image.
+cd /home/$USER/Documents/deviantart-scraper/
 FILE_PATH=$(python3 devianart.py -d /tmp -f wallpaper -c 1 -r | tail -1)
+cd $ORIGINAL_DIR
 
 # Delete cached wallpaper.
 rm -f /home/$USER/.cache/wallpaper/*
