@@ -75,17 +75,18 @@ USER=$(whoami)
 ORIGINAL_DIR=$(pwd)
 
 # Delete cached wallpaper.
-rm -f /tmp/wallpaper.*
+rm -f /tmp/wallpaper.jpg /tmp/wallpaper.jpeg /tmp/wallpaper.gif /tmp/wallpaper.png
 
 # Download image.
 cd /home/$USER/Documents/deviantart-scraper/
-FILE_PATH=$(python3 devianart.py -d /tmp -f wallpaper -c 1 -r | tail -1)
+python3 devianart.py -d /tmp -f wallpaper -c 1 -r > /tmp/wallpaper.log
+FILE_PATH=$(tail -n 1 /tmp/wallpaper.log)
 cd $ORIGINAL_DIR
 
 # Delete cached wallpaper.
 rm -f /home/$USER/.cache/wallpaper/*
 
-echo "Downloaded $FILE_PATH"
+echo "Downloaded $FILE_PATH" >> /tmp/wallpaper.log
 
 # Set new wallpaper.
 gsettings set org.gnome.desktop.background picture-options "zoom"
