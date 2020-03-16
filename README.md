@@ -72,15 +72,12 @@ You can automatically download and set the desktop background wallpaper by using
 #!/bin/bash
 
 USER=$(whoami)
-ORIGINAL_DIR=$(pwd)
 
 # Delete cached wallpaper.
 rm -f /tmp/wallpaper.*
 
 # Download image.
-cd /home/$USER/Documents/deviantart-scraper/
-FILE_PATH=$(python3 devianart.py /tmp wallpaper 1 random | tail -1)
-cd $ORIGINAL_DIR
+FILE_PATH=$(python3 devianart.py -d /tmp -f wallpaper -c 1 -r | tail -1)
 
 # Delete cached wallpaper.
 rm -f /home/$USER/.cache/wallpaper/*
@@ -95,6 +92,7 @@ gsettings set org.gnome.desktop.background picture-uri file://$FILE_PATH
 You can automatically run the above bash script via cron job with the following command.
 
 ```bash
+chmod +x wallpaper.sh
 crontab -e
 ```
 
