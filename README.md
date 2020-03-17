@@ -1,12 +1,12 @@
 # DeviantArt Scraper
 
-The easy way to download the highest resolution DeviantArt Galleries. For more information check this [article](http://mlvnt.com/blog/tech/2018/04/scraping-deviantart/).
+The easy way to download the highest resolution DeviantArt Galleries. For more information check this [article](https://mlvnt.com/blog/tech/2018/05/scraping-deviantart/).
 
 ![Demo](demo.gif)
 
 ## Requirements
 
-**1. Install python dependencies:** 
+**1. Install python dependencies:**
 
 ```
 pip install -r requirements.txt
@@ -26,25 +26,94 @@ pip install -r requirements.txt
     sudo pacman -S chromium
     ```
 
-## Run
+**3. Download the Chrome Driver.**
 
-**1.** Replace on line *54* **username** with the username of your peferred artist:
+- Download [Chrome Driver version 79](https://chromedriver.storage.googleapis.com/index.html?path=79.0.3945.36/)
+- Copy `chromedriver` into the folder `deviantart-scraper`.
+
+
+## Quick Start
+
+To begin downloading images, use the following steps. Images will be downloaded into a default folder `images`. Additionally, a metadata file `gallery.txt` will be generated, containing the names of the files downloaded.
+
+```bash
+python3 devianart.py
+```
+
+## Additional Options
+
+The following command-line arguments are supported.
+
+```bash
+python3 devianart.py --help
+```
+
+```text
+usage: devianart.py [-h] [-d DIR] [-f FILENAME] [-u URL] [-c COUNT] [-r]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d DIR, --dir DIR     Directory to store images. Default: ./images
+  -f FILENAME, --filename FILENAME
+                        Explicit base filename to use. Default: downloaded
+                        filename
+  -u URL, --url URL     DeviantArt gallery url to scrape images from. Default:
+                        deviantart.com
+  -c COUNT, --count COUNT
+                        Maximum number of images to download. Default: 25
+  -r, --random          Download a random image. Default: False
+```
+
+## Automatically Changing the Desktop Background Wallpaper
+
+You can automatically download and set the desktop background wallpaper by using the command-line arguments with a script or desktop background image changer utility. The following example demonstrates this for Linux Mint using [wallpaper.sh](wallpaper.sh).
+
+```bash
+#!/bin/bash
+
+USER=$(whoami)
+ORIGINAL_DIR=$(pwd)
+
+# Fix to allow cronjob to accurately set the desktop background. https://askubuntu.com/a/198508
+fl=$(find /proc -maxdepth 2 -user $USER -name environ -print -quit)
+while [ -z $(grep -z DBUS_SESSION_BUS_ADDRESS "$fl" | cut -d= -f2- | tr -d '\000' ) ]
+do
+  fl=$(find /proc -maxdepth 2 -user $USER -name environ -newer "$fl" -print -quit)
+done
+export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS "$fl" | cut -d= -f2-)
+echo $DBUS_SESSION_BUS_ADDRESS > /tmp/wallpaper.log
+
+# Delete cached wallpaper.
+rm -f /tmp/wallpaper.jpg /tmp/wallpaper.jpeg /tmp/wallpaper.gif /tmp/wallpaper.png
+
+# Download image.
+cd /home/$USER/Documents/deviantart-scraper/
+python3 devianart.py -d /tmp -f wallpaper -c 1 -r >> /tmp/wallpaper.log
+FILE_PATH=$(tail -n 1 /tmp/wallpaper.log)
+cd $ORIGINAL_DIR
+
+# Delete cached wallpaper.
+rm -f /home/$USER/.cache/wallpaper/*
+
+echo "Downloaded $FILE_PATH" >> /tmp/wallpaper.log
+
+# Set new wallpaper.
+gsettings set org.gnome.desktop.background picture-options "zoom"
+gsettings set org.gnome.desktop.background picture-uri file://$FILE_PATH
+```
+
+You can automatically run the above bash script via cron job with the following command.
+
+```bash
+chmod +x wallpaper.sh
+crontab -e
+```
+
+Paste the following lines to the end of the cron file.
 
 ```
-54   d.get('https://username.deviantart.com/gallery/')
-```
-
-**2.** Run 
-    
-```
-python3 deviantart.py
-```
-
-**3.** You'll end up with a text file containing the image URLs and a folder with all the downloaded images
-
-```
-<username>-gallery.txt
-<username>.deviantart.com/  
+# Add a cron job to run this script every 15 minutes.
+*/15 * * * * /home/YOUR_USER_NAME/Documents/deviantart-scraper/wallpaper.sh
 ```
 
 ## License
