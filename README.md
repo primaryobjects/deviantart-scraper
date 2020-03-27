@@ -114,6 +114,7 @@ Paste the following lines to the end of the cron file.
 ```
 # Add a cron job to run this script every 15 minutes.
 */15 * * * * /home/YOUR_USER_NAME/Documents/deviantart-scraper/wallpaper.sh
+@reboot /home/YOUR_USER_NAME/Documents/deviantart-scraper/wallpaper.sh
 ```
 
 ## License
