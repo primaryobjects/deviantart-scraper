@@ -7,30 +7,50 @@
 #
 USER=$(whoami)
 ORIGINAL_DIR=$(pwd)
+LOG_DIR=/var/tmp/wallpaper.log
+
+START_DATE_TIME=$(date '+%m/%d/%Y %H:%M:%S')
+echo "$START_DATE_TIME Starting wallpaper change." > $LOG_DIR
 
 # Fix to allow cronjob to accurately set the desktop background. https://askubuntu.com/a/198508
+count=0
 fl=$(find /proc -maxdepth 2 -user $USER -name environ -print -quit)
 while [ -z $(grep -z DBUS_SESSION_BUS_ADDRESS "$fl" | cut -d= -f2- | tr -d '\000' ) ]
 do
+  count=$((count+1))
+  if [ "$count" -gt 100 ];then
+    DATE_TIME=$(date '+%m/%d/%Y %H:%M:%S')
+    echo "$DATE_TIME Failed to find DBUS_SESSION after $((count-1)) attempts." >> $LOG_DIR
+    break
+  fi
+
+  DATE_TIME=$(date '+%m/%d/%Y %H:%M:%S')
+  echo "$DATE_TIME Searching for DBUS_SESSION ($count)." >> $LOG_DIR
+
   fl=$(find /proc -maxdepth 2 -user $USER -name environ -newer "$fl" -print -quit)
 done
+
 export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS "$fl" | cut -d= -f2-)
-echo $DBUS_SESSION_BUS_ADDRESS > /tmp/wallpaper.log
+DATE_TIME=$(date '+%m/%d/%Y %H:%M:%S')
+echo "$DATE_TIME Found DBUS_SESSION at $DBUS_SESSION_BUS_ADDRESS" >> $LOG_DIR
 
 # Delete cached wallpaper.
-rm -f /tmp/wallpaper.jpg /tmp/wallpaper.jpeg /tmp/wallpaper.gif /tmp/wallpaper.png
+rm -f /var/tmp/wallpaper.jpg /var/tmp/wallpaper.jpeg /var/tmp/wallpaper.gif /var/tmp/wallpaper.png
 
 # Download image.
 cd /home/$USER/Documents/deviantart-scraper/
-python3 devianart.py -d /tmp -f wallpaper -c 1 -r >> /tmp/wallpaper.log
-FILE_PATH=$(tail -n 1 /tmp/wallpaper.log)
+python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r >> $LOG_DIR
+FILE_PATH=$(tail -n 1 $LOG_DIR)
 cd $ORIGINAL_DIR
 
 # Delete cached wallpaper.
 rm -f /home/$USER/.cache/wallpaper/*
 
-echo "Downloaded $FILE_PATH" >> /tmp/wallpaper.log
-
 # Set new wallpaper.
 gsettings set org.gnome.desktop.background picture-options "zoom"
+gsettings set org.gnome.desktop.background picture-uri file://$FILE_PATH_invalid
 gsettings set org.gnome.desktop.background picture-uri file://$FILE_PATH
+
+END_DATE_TIME=$(date '+%m/%d/%Y %H:%M:%S')
+echo "Downloaded $FILE_PATH" >> $LOG_DIR
+echo "Started at $START_DATE_TIME. Finished at $END_DATE_TIME." >> $LOG_DIR
