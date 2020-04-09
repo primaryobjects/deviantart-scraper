@@ -28,7 +28,7 @@ pip install -r requirements.txt
 
 **3. Download the Chrome Driver.**
 
-- Download [Chrome Driver version 79](https://chromedriver.storage.googleapis.com/index.html?path=79.0.3945.36/)
+- Download [Chrome Driver](https://chromedriver.chromium.org/downloads). *Note, the version should match your version of Chrome installed.*
 - Copy `chromedriver` into the folder `deviantart-scraper`.
 
 
