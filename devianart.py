@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import WebDriverException, SessionNotCreatedException
 from bs4 import BeautifulSoup
 from queue import Queue
 from threading import Thread, Lock
@@ -16,6 +16,10 @@ import subprocess
 import imghdr
 import argparse
 from random import randint
+import urllib.request
+import re
+import zipfile
+import stat
 
 #======================== INITIALIZE VARIABLES =================================
 
@@ -41,11 +45,78 @@ def welcome_message():
     print('\n  DATE:  ' + today)
 
 #======================== GET SELENIUM DRIVER ==================================
+def download_driver():
+    result = False
+    url = 'https://chromedriver.chromium.org/downloads'
+    base_driver_url = 'https://chromedriver.storage.googleapis.com/'
+    file_name = 'chromedriver_linux64.zip'
+    driver_file_name = 'chromedriver'
+    pattern = 'https://.*?path=(\d+\.\d+\.\d+\.\d+)'
+
+    # Download latest chromedriver.
+    print('Finding latest chromedriver..')
+    opener = urllib.request.FancyURLopener({})
+    stream = opener.open(url)
+    content = stream.read().decode('utf8')
+
+    # Parse the latest version.
+    match = re.search(pattern, content)
+    if match and match.groups():
+        # Url of download html page.
+        url = match.group(0)
+        # Version of latest driver.
+        version = match.group(1)
+        driver_url = base_driver_url + version + '/' + file_name
+
+        # Download the file.
+        print('Version ' + version)
+        print('Downloading ' + driver_url)
+        app_path = os.path.dirname(os.path.realpath(__file__))
+        chromedriver_path = app_path + '/' + driver_file_name
+        file_path = app_path + '/' + file_name
+        urllib.request.urlretrieve(driver_url, file_path)
+
+        # Unzip the file.
+        print('Unzipping ' + file_path)
+        with zipfile.ZipFile(file_path, 'r') as zip_ref:
+            zip_ref.extractall(app_path)
+
+        print('Setting executable permission on ' + chromedriver_path)
+        st = os.stat(chromedriver_path)
+        os.chmod(chromedriver_path, st.st_mode | stat.S_IEXEC)
+
+        # Cleanup.
+        os.remove(file_path)
+
+        result = True
+
+    return result
 
 def get_driver():
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    driver = webdriver.Chrome(chrome_options=options, executable_path='./chromedriver')
+    driver = None
+    retry = True
+
+    while retry:
+        retry = False
+        is_download = False
+
+        try:
+            options = webdriver.ChromeOptions()
+            options.add_argument('--headless')
+            driver = webdriver.Chrome(chrome_options=options, executable_path='./chromedriver')
+        except SessionNotCreatedException as e:
+            if 'This version of ChromeDriver' in e.msg:
+                is_download = True
+        except WebDriverException as e:
+            if "wrong permissions" in e.msg:
+                st = os.stat('./chromedriver')
+                os.chmod('./chromedriver', st.st_mode | stat.S_IEXEC)
+                retry = True
+            elif "chromedriver' executable needs to be in PATH" in e.msg:
+                is_download = True
+
+        retry = is_download and download_driver()
+
     return driver
 
 #======================== GET USERNAME =========================================
