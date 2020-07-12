@@ -39,7 +39,14 @@ rm -f /var/tmp/wallpaper.jpg /var/tmp/wallpaper.jpeg /var/tmp/wallpaper.gif /var
 
 # Download image.
 cd /home/$USER/Documents/deviantart-scraper/
-python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r >> $LOG_DIR
+
+month=$(date +%m)
+if [ $month -eq "10" ]; then
+    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u https://www.deviantart.com/topic/horror >> $LOG_DIR
+else
+    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r >> $LOG_DIR
+fi
+
 FILE_PATH=$(tail -n 1 $LOG_DIR)
 cd $ORIGINAL_DIR
 
