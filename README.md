@@ -10,6 +10,7 @@ The easy way to download the highest resolution DeviantArt Galleries. For more i
 
 ```
 pip install -r requirements.txt
+sudo pip3 install selenium
 ```
 
 **2. Install Chromium:**
