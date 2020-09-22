@@ -103,7 +103,7 @@ def get_driver():
         try:
             options = webdriver.ChromeOptions()
             options.add_argument('--headless')
-            driver = webdriver.Chrome(chrome_options=options, executable_path='./chromedriver')
+            driver = webdriver.Chrome(options=options, executable_path='./chromedriver')
         except SessionNotCreatedException as e:
             if 'This version of ChromeDriver' in e.msg:
                 is_download = True
