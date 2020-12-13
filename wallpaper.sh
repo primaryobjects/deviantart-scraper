@@ -42,9 +42,9 @@ cd /home/$USER/Documents/deviantart-scraper/
 
 month=$(date +%m)
 if [ $month -eq "10" ]; then
-    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u https://www.deviantart.com/topic/horror >> $LOG_DIR
+    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/topic/horror" >> $LOG_DIR
 elif [ $month -eq "12" ]; then
-    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u https://www.deviantart.com/topic/photo-manipulation >> $LOG_DIR
+    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/topic/photo-manipulation" >> $LOG_DIR
 else
     python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r >> $LOG_DIR
 fi
