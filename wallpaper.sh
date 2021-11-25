@@ -43,7 +43,19 @@ cd /home/$USER/Documents/deviantart-scraper/
 month=$(date +%m)
 if [ $month -eq "10" ]; then
     python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/topic/horror" >> $LOG_DIR
+elif [ $month -eq "11" ]; then
+    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/search/deviations?q=autumn" >> $LOG_DIR
 elif [ $month -eq "12" ]; then
+    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/search/deviations?q=christmas" >> $LOG_DIR
+elif [ $month -eq "1" ]; then
+    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/search/deviations?q=winter" >> $LOG_DIR
+elif [ $month -eq "2" ]; then
+    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/search/deviations?q=snow" >> $LOG_DIR
+elif [ $month -eq "3" ]; then
+    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/search/deviations?q=spring" >> $LOG_DIR
+elif [ $month -eq "4" ]; then
+    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/search/deviations?q=flowers" >> $LOG_DIR
+elif [ $month -eq "5" ]; then
     python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/topic/photo-manipulation" >> $LOG_DIR
 else
     python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r >> $LOG_DIR
