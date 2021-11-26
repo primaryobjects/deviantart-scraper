@@ -13,6 +13,7 @@ import imghdr
 import argparse
 from random import randint
 from chromedriver import get_driver
+from selenium.common.exceptions import NoSuchElementException
 
 #======================== INITIALIZE VARIABLES =================================
 
@@ -50,6 +51,7 @@ def get_username(d):
 def get_thumb_links(q):
     d = get_driver()
     # REPLACE username with your preferred artist
+    print('Downloading ' + url)
     d.get(url)
     unique_img = scroll_page_down(d)
     time.sleep(0.5)
@@ -74,13 +76,22 @@ def scroll_page_down(d):
         r = randint(0, 250)
 
     # Get scroll height
+    page = 1
     last_height = d.execute_script("return document.body.scrollHeight")
     while ((r == -1 and len(images) < max_image_count) or (r > -1 and len(images) < r + 1)) or max_image_count == 0:
+        next = None
+        try:
+            next = d.find_element_by_xpath("//a[contains(text(), 'Next') and contains(@href,'?cursor=')]")
+        except NoSuchElementException:
+            print("Skipping next button and using auto-scrolling.")
+
         # Scroll down to bottom
+        print('Auto-scrolling down page.')
         d.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(SCROLL_PAUSE_TIME) # Wait to load page
         # Calculate new scroll height and compare with last scroll height
         new_height = d.execute_script("return document.body.scrollHeight")
+
         im = d.find_element_by_xpath("//div[@data-hook='all_content']")
         links = im.find_elements_by_xpath("//a[@data-hook='deviation_link']")
 
@@ -91,14 +102,24 @@ def scroll_page_down(d):
                 images.append(l)
             else:
                 print('Skipping duplicate ' + l)
+
         unique_img = list(set(images)) # Remove duplicates
         time.sleep(0.5)
-        # Break when the end is reached
-        if new_height == last_height:
-            break
-        last_height = new_height
+
+        if not next:
+            # Break when the end is reached
+            if new_height == last_height:
+                break
+            last_height = new_height
+        else:
+            print('Moving to page ' + str(page + 1))
+            url = next.get_attribute("href")
+            print(url)
+            d.get(url)
+            page += 1
 
     if r > 0:
+        print("Selecting image #" + str(r))
         selected_image = images[r]
         images.clear()
         images.append(selected_image)
