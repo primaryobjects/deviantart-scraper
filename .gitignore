@@ -1,2 +1,4 @@
 chromedriver
 -gallery.txt
+*.pyc
+images
