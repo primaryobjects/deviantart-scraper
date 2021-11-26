@@ -5,11 +5,47 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Download gallery",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "devianart.py",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Download 3 images from gallery",
+            "type": "python",
+            "request": "launch",
+            "program": "devianart.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--count",
+                "3"
+            ]
+        },
+        {
+            "name": "Download gallery custom url",
+            "type": "python",
+            "request": "launch",
+            "program": "devianart.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--url",
+                "https://www.deviantart.com/topic/photo-manipulation"
+            ]
+        },
+        {
+            "name": "Download 1 random",
+            "type": "python",
+            "request": "launch",
+            "program": "devianart.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--count",
+                "1",
+                "--random"
+            ]
         }
     ]
 }
+
+-c 1 -r

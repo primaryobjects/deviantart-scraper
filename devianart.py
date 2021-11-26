@@ -24,6 +24,7 @@ tasks   = Queue()
 lock    = Lock()
 img_num = 0
 max_image_count = 0 # Set to 0 for all images.
+no_image_found_count = 0
 folder = ''
 file_name = ''
 first_image = ''
@@ -75,26 +76,38 @@ def scroll_page_down(d):
     if is_random:
         r = randint(0, 250)
 
-    # Get scroll height
     page = 1
+    next = None
     last_height = d.execute_script("return document.body.scrollHeight")
+
     while ((r == -1 and len(images) < max_image_count) or (r > -1 and len(images) < r + 1)) or max_image_count == 0:
-        next = None
+        if next:
+            # Navigate to the next page of results.
+            url = next.get_attribute("href")
+            page += 1
+            print('Moving to page ' + str(page) + ' at ' + url)
+            d.get(url)
+
+        # Get next page.
         try:
+            # If a "Next" link exists, get the url for it.
             next = d.find_element_by_xpath("//a[contains(text(), 'Next') and contains(@href,'?cursor=')]")
         except NoSuchElementException:
             print("Skipping next button and using auto-scrolling.")
 
-        # Scroll down to bottom
-        print('Auto-scrolling down page.')
-        d.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(SCROLL_PAUSE_TIME) # Wait to load page
-        # Calculate new scroll height and compare with last scroll height
-        new_height = d.execute_script("return document.body.scrollHeight")
+        if not next:
+            # If no "Next" link exists, scroll down to bottom of page.
+            print('Auto-scrolling down page.')
+            d.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(SCROLL_PAUSE_TIME) # Wait to load page
+            # Calculate new scroll height and compare with last scroll height
+            new_height = d.execute_script("return document.body.scrollHeight")
 
+        # Find all content links on the page.
         im = d.find_element_by_xpath("//div[@data-hook='all_content']")
         links = im.find_elements_by_xpath("//a[@data-hook='deviation_link']")
 
+        # Queue unique links.
         for link in links:
             l = link.get_attribute('href')
             if not l in images and (max_image_count == 0 or ((r == -1 and len(images) < max_image_count) or (r > -1 and len(images) < r + 1))):
@@ -103,23 +116,20 @@ def scroll_page_down(d):
             else:
                 print('Skipping duplicate ' + l)
 
-        unique_img = list(set(images)) # Remove duplicates
+        # Remove duplicate links.
+        unique_img = list(set(images))
         time.sleep(0.5)
 
         if not next:
-            # Break when the end is reached
+            # Break when the end is reached while scrolling down.
             if new_height == last_height:
                 break
             last_height = new_height
-        else:
-            print('Moving to page ' + str(page + 1))
-            url = next.get_attribute("href")
-            print(url)
-            d.get(url)
-            page += 1
 
     if r > 0:
-        print("Selecting image #" + str(r))
+        # Select new index for random image.
+        r = randint(0, len(images))
+        print("Selecting image " + str(r) + " of " + str(len(images)))
         selected_image = images[r]
         images.clear()
         images.append(selected_image)
@@ -135,20 +145,28 @@ def get_full_image(l):
     soup = BeautifulSoup(s.get(l, headers=h).text, 'html.parser')
     title = ''
     link = ''
+    it = None
+
     try:
         art_stage = soup.find('div', attrs={'data-hook': 'art_stage'})
-        link = art_stage.find('img')['src']
-        title = soup.find('h1', attrs={'data-hook': 'deviation_title'}).text.replace(' ', '_').lower()
+        img = art_stage.find('img')
+        if img:
+            link = img['src']
+        h1 = soup.find('h1', attrs={'data-hook': 'deviation_title'})
+        if h1:
+            title = h1.text.replace(' ', '_').lower()
     except TypeError as e:
         print('Error downloading ' + l)
         print(e)
 
-    req = s.get(link, headers=h)
-    time.sleep(0.1)
-    download_now(req,title)
-    url = req.url
-    ITuple = collections.namedtuple('ITuple', ['u', 't'])
-    it = ITuple(u=url, t=title)
+    if link:
+        req = s.get(link, headers=h)
+        time.sleep(0.1)
+        download_now(req,title)
+        url = req.url
+        ITuple = collections.namedtuple('ITuple', ['u', 't'])
+        it = ITuple(u=url, t=title)
+
     return it
 
 #======================== GET AGE-RESTRICTED IMAGES ============================
@@ -224,14 +242,19 @@ def worker_thread(q, lock):
         if link is None:
             break
         p = get_full_image(link)
-        url = p.u
-        title = p.t
-        name = name_format(url, title)
-        with lock:
-            save_img(url)
-            global img_num
-            img_num = img_num + 1
-            print('Image ' + str(img_num) + ' ' + name)
+        if p:
+            url = p.u
+            title = p.t
+            name = name_format(url, title)
+            with lock:
+                save_img(url)
+                global img_num
+                img_num = img_num + 1
+                print('Image ' + str(img_num) + ' ' + name)
+        else:
+            global no_image_found_count
+            no_image_found_count += 1
+            print('No image found for ' + link)
         q.task_done()
 
 #======================== MAIN FUNCTION ========================================
@@ -283,7 +306,7 @@ def main():
         try:
             folder_size = subprocess.check_output(['du','-shx', folder]).split()[0].decode('utf-8')
             print('\n  Total Images: ' + str(img_num) + ' (' + str(folder_size) + ')')
-            print('  Expected: ' + expected_img_num)
+            print('  Expected: ' + expected_img_num - no_image_found_count)
             end = time.time()
             print('  Elapsed Time: {:.4f}\n'.format(end-start))
         except:
