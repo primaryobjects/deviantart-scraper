@@ -14,6 +14,7 @@ import argparse
 from random import randint
 from chromedriver import get_driver
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.common.by import By
 
 #======================== INITIALIZE VARIABLES =================================
 
@@ -83,7 +84,7 @@ def scroll_page_down(d):
     while ((r == -1 and len(images) < max_image_count) or (r > -1 and len(images) < r + 1)) or max_image_count == 0:
         if next:
             # Navigate to the next page of results.
-            url = next.get_attribute("href")
+            url = next[0].get_attribute("href")
             page += 1
             print('Moving to page ' + str(page) + ' at ' + url)
             d.get(url)
@@ -91,7 +92,7 @@ def scroll_page_down(d):
         # Get next page.
         try:
             # If a "Next" link exists, get the url for it.
-            next = d.find_element_by_xpath("//a[contains(text(), 'Next') and contains(@href,'?cursor=')]")
+            next = d.find_elements(By.XPATH, "//a[contains(text(), 'Next') and contains(@href,'?cursor=')]")
         except NoSuchElementException:
             print("Skipping next button and using auto-scrolling.")
 
@@ -104,8 +105,8 @@ def scroll_page_down(d):
             new_height = d.execute_script("return document.body.scrollHeight")
 
         # Find all content links on the page.
-        im = d.find_element_by_xpath("//div[@data-hook='all_content']")
-        links = im.find_elements_by_xpath("//a[@data-hook='deviation_link']")
+        im = d.find_elements(By.XPATH, "//div[@data-hook='all_content']")
+        links = d.find_elements(By.XPATH, "//a[@data-hook='deviation_link']")
 
         # Queue unique links.
         for link in links:
@@ -175,15 +176,15 @@ def age_restricted(l):
     d = get_driver()
     d.get(l)
     time.sleep(0.8)
-    d.find_element_by_class_name('datefields')
-    d.find_elements_by_class_name('datefield')
-    d.find_element_by_id('month').send_keys('01')
-    d.find_element_by_id('day').send_keys('01')
-    d.find_element_by_id('year').send_keys('1991')
-    d.find_element_by_class_name('tos-label').click()
-    d.find_element_by_class_name('submitbutton').click()
+    d.find_elements(By.CLASS_NAME, 'datefields')
+    d.find_elements(By.CLASS_NAME, 'datefield')
+    d.find_elements(By.ID, 'month').send_keys('01')
+    d.find_elements(By.ID, 'day').send_keys('01')
+    d.find_elements(By.ID, 'year').send_keys('1991')
+    d.find_elements(By.CLASS_NAME, 'tos-label').click()
+    d.find_elements(By.CLASS_NAME, 'submitbutton').click()
     time.sleep(1)
-    img_lnk = d.find_element_by_class_name('dev-page-download')
+    img_lnk = d.find_elements(By.CLASS_NAME, 'dev-page-download')
     d.get(img_lnk.get_attribute('href'))
     time.sleep(0.5)
     link = d.current_url
@@ -206,6 +207,7 @@ def download_now(req,title):
 
     url = req.url
     name = file_name or name_format(url,title)
+    name = name.replace('/', '_')
 
     global folder
     pathlib.Path('{}'.format(folder)).mkdir(parents=True, exist_ok=True)
