@@ -44,17 +44,17 @@ month=$(date +%m)
 if [ $month -eq "10" ]; then
     python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/topic/horror" >> $LOG_DIR
 elif [ $month -eq "11" ]; then
-    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/search/deviations?q=autumn" >> $LOG_DIR
+    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/topic/artisan-crafts" >> $LOG_DIR
 elif [ $month -eq "12" ]; then
-    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/search/deviations?q=christmas" >> $LOG_DIR
+    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/topic/poetry" >> $LOG_DIR
 elif [ $month -eq "1" ]; then
-    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/search/deviations?q=winter" >> $LOG_DIR
+    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/topic/photography" >> $LOG_DIR
 elif [ $month -eq "2" ]; then
-    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/search/deviations?q=snow" >> $LOG_DIR
+    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/topic/game-art" >> $LOG_DIR
 elif [ $month -eq "3" ]; then
-    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/search/deviations?q=spring" >> $LOG_DIR
+    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/topic/stock-images" >> $LOG_DIR
 elif [ $month -eq "4" ]; then
-    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/search/deviations?q=flowers" >> $LOG_DIR
+    python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/topic/science-fiction" >> $LOG_DIR
 elif [ $month -eq "5" ]; then
     python3 devianart.py -d /var/tmp -f wallpaper -c 1 -r -u "https://www.deviantart.com/topic/photo-manipulation" >> $LOG_DIR
 else
