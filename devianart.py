@@ -105,17 +105,17 @@ def scroll_page_down(d):
             new_height = d.execute_script("return document.body.scrollHeight")
 
         # Find all content links on the page.
-        im = d.find_elements(By.XPATH, "//div[@data-hook='all_content']")
-        links = d.find_elements(By.XPATH, "//a[@data-hook='deviation_link']")
+        links = d.find_elements(By.XPATH, "//div[@data-testid='thumb']/..")
 
         # Queue unique links.
         for link in links:
             l = link.get_attribute('href')
-            if not l in images and (max_image_count == 0 or ((r == -1 and len(images) < max_image_count) or (r > -1 and len(images) < r + 1))):
-                print('Queuing ' + l)
-                images.append(l)
-            else:
-                print('Skipping duplicate ' + l)
+            if l:
+                if not l in images and (max_image_count == 0 or ((r == -1 and len(images) < max_image_count) or (r > -1 and len(images) < r + 1))):
+                    print('Queuing ' + l)
+                    images.append(l)
+                else:
+                    print('Skipping duplicate ' + l)
 
         # Remove duplicate links.
         unique_img = list(set(images))
@@ -149,11 +149,10 @@ def get_full_image(l):
     it = None
 
     try:
-        art_stage = soup.find('div', attrs={'data-hook': 'art_stage'})
-        img = art_stage.find('img')
+        img = soup.find('img', {"property": "contentUrl"})
         if img:
             link = img['src']
-        h1 = soup.find('h1', attrs={'data-hook': 'deviation_title'})
+        h1 = soup.find('h1')
         if h1:
             title = h1.text.replace(' ', '_').lower()
     except TypeError as e:
