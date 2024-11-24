@@ -34,7 +34,7 @@ $url = switch ($month) {
 }
 
 # Download image
-python "$userProfile\Documents\deviantart-scraper\devianart.py" -f wallpaper -c 1 -r -u $url
+python "$userProfile\$deviantArtScraperFolder\devianart.py" -f wallpaper -c 1 -r -u $url
 
 # Get all image files in the folder
 $wallpapers = Get-ChildItem -Path $wallpaperFolder -Recurse | Where-Object { $_.Extension -match "jpg|jpeg|png|bmp" }
