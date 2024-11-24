@@ -71,7 +71,14 @@ You can automatically download and set the desktop background wallpaper by using
 
 ### Windows
 
-The following Windows PowerShell script will automatically download and set the desktop wallpaper.
+The following Windows PowerShell script will automatically download and set the desktop wallpaper. To run this automatically every day:
+
+1. Open Task Scheduler by pressing **Win + R**, type **taskschd.msc**, and press Enter.
+2. In the Task Scheduler window, click on **Create Task** in the right-hand pane.
+3. For **Triggers**, set to run **Daily**.
+4. For **Actions**, in the Program/script field, enter **powershell.exe**.
+5. In the **Add arguments** (optional) field, enter **-File "C:\Path\To\Your\Script\wallpaper.ps1"**
+6. Click **OK** to save the task.
 
 ```bash
 # Get the current logged-in user's profile path
