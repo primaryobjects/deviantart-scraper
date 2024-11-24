@@ -5,6 +5,7 @@ from selenium.common.exceptions import WebDriverException, SessionNotCreatedExce
 from selenium.webdriver.chrome.service import Service
 import sys
 import os
+import shutil
 import pathlib
 import urllib.request
 import re
@@ -31,7 +32,7 @@ def get_driver():
         try:
             options = webdriver.ChromeOptions()
             options.add_argument('--headless')
-            executable_path='./chromedriver'
+            executable_path="./chromedriver" + ('.exe' if 'win' in platform else '')
             service = Service(executable_path=executable_path)
             driver = webdriver.Chrome(options=options, service=service)
         except SessionNotCreatedException as e:
@@ -45,6 +46,9 @@ def get_driver():
                 retry = True
             elif "chromedriver' executable needs to be in PATH" in e.msg:
                 is_download = True
+            elif "error" in e.msg:
+                print(e.msg)
+                is_download = True
 
         retry = is_download and download_driver(major_version)
 
@@ -53,11 +57,11 @@ def get_driver():
 def download_driver(version=None):
     # Find the latest chromedriver, download, unzip, set permissions to executable.
     result = False
-    url = 'https://chromedriver.chromium.org/downloads'
-    base_driver_url = 'https://chromedriver.storage.googleapis.com/'
-    file_name = 'chromedriver_' + get_platform_filename()
+    url = 'https://googlechromelabs.github.io/chrome-for-testing'
+    base_driver_url = 'https://storage.googleapis.com/chrome-for-testing-public'
+    file_name = 'chromedriver-' + get_platform_filename()
     driver_file_name = 'chromedriver' + '.exe' if platform == "win32" else ''
-    pattern = 'https://.*?path=(' + (version or '\d+') + '\.\d+\.\d+\.\d+)'
+    pattern = 'https://storage.googleapis.com/chrome-for-testing-public/(' + (version or '\d+') + '\.\d+\.\d+\.\d+)'
 
     # Download latest chromedriver.
     print('Finding latest chromedriver..')
@@ -72,7 +76,7 @@ def download_driver(version=None):
         url = match.group(0)
         # Version of latest driver.
         version = match.group(1)
-        driver_url = base_driver_url + version + '/' + file_name
+        driver_url = f"{base_driver_url}/{version}/{get_platform_filename(False)}/{file_name}"
 
         # Download the file.
         print('Version ' + version)
@@ -87,6 +91,10 @@ def download_driver(version=None):
         with zipfile.ZipFile(file_path, 'r') as zip_ref:
             zip_ref.extractall(app_path)
 
+        # Copy exe to parent path.
+        source_file_path = f"chromedriver-{get_platform_filename(False)}/chromedriver.exe"
+
+        shutil.copyfile(source_file_path, chromedriver_path)
         print('Setting executable permission on ' + chromedriver_path)
         st = os.stat(chromedriver_path)
         os.chmod(chromedriver_path, st.st_mode | stat.S_IEXEC)
@@ -98,23 +106,22 @@ def download_driver(version=None):
 
     return result
 
-def get_platform_filename():
+def get_platform_filename(isExtension=True):
     filename = ''
 
     is_64bits = sys.maxsize > 2**32
 
     if platform == "linux" or platform == "linux2":
         # linux
-        filename += 'linux'
-        filename += '64' if is_64bits else '32'
+        filename += 'linux64'
     elif platform == "darwin":
         # OS X
-        filename += 'mac64'
+        filename += 'mac-x64'
     elif platform == "win32":
-        # Windows...
-        filename += 'win32'
+        # Windows
+        filename += 'win64' if is_64bits else 'win32'
 
-    filename += '.zip'
+    filename += '.zip' if isExtension else ''
 
     return filename
 

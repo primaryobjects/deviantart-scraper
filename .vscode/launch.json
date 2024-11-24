@@ -6,14 +6,14 @@
     "configurations": [
         {
             "name": "Download gallery",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "devianart.py",
             "console": "integratedTerminal"
         },
         {
             "name": "Download 3 images from gallery",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "devianart.py",
             "console": "integratedTerminal",
@@ -24,7 +24,7 @@
         },
         {
             "name": "Download gallery custom url",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "devianart.py",
             "console": "integratedTerminal",
@@ -35,7 +35,7 @@
         },
         {
             "name": "Download wallpaper",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "devianart.py",
             "console": "integratedTerminal",
@@ -51,7 +51,7 @@
         },
         {
             "name": "Download 1 random",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "devianart.py",
             "console": "integratedTerminal",
