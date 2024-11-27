@@ -22,12 +22,13 @@ $month = (Get-Date).Month
 
 # Define the URL based on the current month
 $url = switch ($month) {
+	9 { "https://www.deviantart.com/topic/creepy" }
     10 { "https://www.deviantart.com/topic/horror" }
-    11 { "https://www.deviantart.com/topic/artisan-crafts" }
-    12 { "https://www.deviantart.com/topic/poetry" }
-    1  { "https://www.deviantart.com/topic/photography" }
-    2  { "https://www.deviantart.com/topic/game-art" }
-    3  { "https://www.deviantart.com/topic/stock-images" }
+    11 { "https://www.deviantart.com/topic/surreal" }
+    12 { "https://www.deviantart.com/topic/christmas" }
+    1  { "https://www.deviantart.com/topic/winter" }
+    2  { "https://www.deviantart.com/topic/cyberpunk" }
+    3  { "https://www.deviantart.com/topic/fantasy" }
     4  { "https://www.deviantart.com/topic/science-fiction" }
     5  { "https://www.deviantart.com/topic/photo-manipulation" }
     default { "https://www.deviantart.com/topic/random" }
