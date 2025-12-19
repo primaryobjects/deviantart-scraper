@@ -2,3 +2,4 @@
 selenium
 bs4
 requests
+standard-imghdr
