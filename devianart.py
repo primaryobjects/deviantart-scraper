@@ -11,7 +11,7 @@ import requests
 import subprocess
 import imghdr
 import argparse
-from random import randint
+from random import randint, choice
 from chromedriver import get_driver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -137,14 +137,15 @@ def scroll_page_down(d):
                 break
             last_height = new_height
 
-    if r > 0:
+    if r > 0 and images:
         # Select new index for random image.
-        r = randint(0, len(images))
-        print("Selecting image " + str(r) + " of " + str(len(images)))
-        selected_image = images[r]
+        selected_image = choice(images) if images else None
+        print("Selected image " + str(images.index(selected_image)) + " of " + str(len(images)))
         images.clear()
         images.append(selected_image)
         unique_img = list(dict.fromkeys(images))
+    elif not images:
+        print("No images found.")
 
     return unique_img
 
