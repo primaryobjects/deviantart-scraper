@@ -108,17 +108,27 @@ def scroll_page_down(d):
         links = d.find_elements(By.XPATH, "//div[@data-testid='thumb']/..")
 
         # Queue unique links.
+        # keep a set for quick membership tests and preserve order in images list
+        seen = set(images)
+
         for link in links:
             l = link.get_attribute('href')
-            if l:
-                if not l in images and (max_image_count == 0 or ((r == -1 and len(images) < max_image_count) or (r > -1 and len(images) < r + 1))):
-                    print('Queuing ' + l)
-                    images.append(l)
-                else:
-                    print('Skipping duplicate ' + l)
+            if not l:
+                continue
+
+            limit_ok = (max_image_count == 0) or ((r == -1 and len(images) < max_image_count) or (r > -1 and len(images) < r + 1))
+
+            if l in seen:
+                print('Skipping duplicate ' + l)
+            elif not limit_ok:
+                print('Skipping (limit reached) ' + l)
+            else:
+                print('Queuing ' + l)
+                seen.add(l)
+                images.append(l)
 
         # Remove duplicate links.
-        unique_img = list(set(images))
+        unique_img = list(dict.fromkeys(images))
         time.sleep(0.5)
 
         if not next:
@@ -134,7 +144,7 @@ def scroll_page_down(d):
         selected_image = images[r]
         images.clear()
         images.append(selected_image)
-        unique_img = list(set(images)) # Remove duplicates
+        unique_img = list(dict.fromkeys(images))
 
     return unique_img
 
@@ -220,7 +230,13 @@ def download_now(req,title):
     if ext == 'jpeg':
         ext = 'jpg'
     base = os.path.splitext(file_path)[0]
-    os.rename(file_path, base + '.' + ext)
+
+    # Overwrite existing destination if present.
+    try:
+        os.replace(file_path, base + '.' + ext)
+    except Exception:
+        # Fallback to os.rename if replace fails for any reason.
+        os.rename(file_path, base + '.' + ext)
 
     global first_image
     if first_image == '':
