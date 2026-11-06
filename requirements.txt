@@ -1,5 +1,5 @@
 ###### Required Packages ######
-selenium
+selenium>=4.6.0
 bs4
 requests
 standard-imghdr
