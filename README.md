@@ -13,6 +13,17 @@ pip install -r requirements.txt
 sudo pip3 install selenium
 ```
 
+**Windows (PowerShell):** Open PowerShell in the project folder and allow scripts
+for the current PowerShell process before running the wallpaper script:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+python -m pip install -r requirements.txt
+```
+
+`wallpaper.ps1` also installs the requirements automatically on its first run if
+Beautiful Soup is not installed for the active Python interpreter.
+
 **2. Install Chromium:**
 
 - Debian Based
@@ -27,10 +38,10 @@ sudo pip3 install selenium
     sudo pacman -S chromium
     ```
 
-**3. Download the Chrome Driver.**
+**3. Set up ChromeDriver.**
 
-- Download [Chrome Driver](https://chromedriver.chromium.org/downloads). *Note, the version should match your version of Chrome installed.*
-- Copy `chromedriver` into the folder `deviantart-scraper`.
+- Selenium Manager automatically locates or downloads a ChromeDriver matching your installed Chrome on first run. This requires an internet connection.
+- Alternatively, download [ChromeDriver](https://googlechromelabs.github.io/chrome-for-testing/) matching your Chrome version and place it in the `deviantart-scraper` folder (`chromedriver.exe` on Windows). If that driver is incompatible, Selenium Manager will be used instead.
 
 
 ## Quick Start
@@ -77,18 +88,15 @@ The following Windows PowerShell script will automatically download and set the 
 2. In the Task Scheduler window, click on **Create Task** in the right-hand pane.
 3. For **Triggers**, set to run **Daily**.
 4. For **Actions**, in the Program/script field, enter **powershell.exe**.
-5. In the **Add arguments** (optional) field, enter **-File "C:\Path\To\Your\Script\wallpaper.ps1"**
+5. In the **Add arguments** (optional) field, enter **-ExecutionPolicy Bypass -File "C:\Path\To\Your\Script\wallpaper.ps1"**
 6. Click **OK** to save the task.
 
-```bash
-# Get the current logged-in user's profile path
-$userProfile = [System.Environment]::GetFolderPath('UserProfile')
-
-# Replace "\Documents\deviantart-scraper" with the path to deviantart-scraper.
-$deviantArtScraperFolder = "Documents\deviantart-scraper"
+```powershell
+# The script uses its own directory, so it can be stored anywhere.
+$scriptDirectory = $PSScriptRoot
 
 # Define the folder containing the wallpapers.
-$wallpaperFolder = "$userProfile\$deviantArtScraperFolder\images"
+$wallpaperFolder = Join-Path $scriptDirectory "images"
 
 # Delete existing wallpaper files
 Remove-Item -Path "$wallpaperFolder\wallpaper.jpg" -ErrorAction SilentlyContinue
@@ -99,7 +107,7 @@ Remove-Item -Path "$wallpaperFolder\wallpaper.bmp" -ErrorAction SilentlyContinue
 $url = "https://www.deviantart.com/topic/random"
 
 # Download image
-python "$userProfile\$deviantArtScraperFolder\devianart.py" -f wallpaper -c 1 -r -u $url
+python (Join-Path $scriptDirectory "devianart.py") -d $wallpaperFolder -f wallpaper -c 1 -r -u $url
 
 # Get all image files in the folder
 $wallpapers = Get-ChildItem -Path $wallpaperFolder -Recurse | Where-Object { $_.Extension -match "jpg|jpeg|png|bmp" }

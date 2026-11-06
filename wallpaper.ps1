@@ -1,15 +1,30 @@
-# Get the current logged-in user's profile path
-$userProfile = [System.Environment]::GetFolderPath('UserProfile')
+$scriptDirectory = $PSScriptRoot
+$requirementsFile = Join-Path $scriptDirectory "requirements.txt"
+$wallpaperFolder = Join-Path $scriptDirectory "images"
+$scraperScript = Join-Path $scriptDirectory "devianart.py"
 
-#############
-# IMPORTANT
-# Replace "\Documents\deviantart-scraper" with the path to deviantart-scraper.
-#############
-$deviantArtScraperFolder = "Documents\deviantart-scraper"
-#############
+$pythonCommand = Get-Command python -ErrorAction SilentlyContinue
+if ($null -eq $pythonCommand) {
+    Write-Error "Python was not found. Install Python and ensure it is available as 'python' in PATH."
+    exit 1
+}
+$python = $pythonCommand.Source
 
-# Define the folder containing the wallpapers.
-$wallpaperFolder = "$userProfile\$deviantArtScraperFolder\images"
+if (-not (Test-Path $requirementsFile)) {
+    Write-Error "Python requirements file was not found: $requirementsFile"
+    exit 1
+}
+
+# Install project dependencies on the first run when Beautiful Soup is unavailable.
+& $python -c "import bs4" 2>$null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Installing Python dependencies..."
+    & $python -m pip install -r $requirementsFile
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to install Python dependencies from $requirementsFile"
+        exit 1
+    }
+}
 
 # Delete existing wallpaper files
 Remove-Item -Path "$wallpaperFolder\wallpaper.jpg" -ErrorAction SilentlyContinue
@@ -35,7 +50,11 @@ $url = switch ($month) {
 }
 
 # Download image
-python "$userProfile\$deviantArtScraperFolder\devianart.py" -f wallpaper -c 1 -r -u $url
+& $python $scraperScript -d $wallpaperFolder -f wallpaper -c 1 -r -u $url
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "The DeviantArt scraper failed."
+    exit 1
+}
 
 # Get all image files in the folder
 $wallpapers = Get-ChildItem -Path $wallpaperFolder -Recurse | Where-Object { $_.Extension -match "jpg|jpeg|png|bmp" }
